@@ -32,7 +32,6 @@ class Template(object):
         self.data = data
 
 #APPLICATION
-
 class Home(Controller):
     def http_get(self):
         return 'Hello world!'
