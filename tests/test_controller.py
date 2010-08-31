@@ -1,5 +1,5 @@
 import unittest
-from main import Home, Contact, AboutUs, Login
+from main import Home, Contact, AboutUs, Login, News
 from mock import Mock
 
 class TestApplication(unittest.TestCase):
@@ -27,3 +27,7 @@ class TestApplication(unittest.TestCase):
         result = login.http_get()
 
         assert result.url == '/login_url_to_somewhere'
+
+    def test_news(self):
+        news = News()
+        assert news.http_get('the bird is the word') == 'the bird is the word'

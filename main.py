@@ -5,22 +5,23 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import users
 
 class Controller( webapp.RequestHandler ):
-    def get(self):
+    def get(self, *args):
+        self.exe_get(self.http_get, *args)
+
+    def exe_get(self, t, *args):
+        get_response = t(*args)
+
         #String
-        if type(self._output) == str:
-            self.response.out.write(self._output)
+        if type(get_response) == str:
+            self.response.out.write(get_response)
 
         #Redirect
-        if type(self._output) == Redirect:
-            self.redirect(self._output.url)
+        if type(get_response) == Redirect:
+            self.redirect(get_response.url)
 
         #Template
-        if type(self._output) == Template:
+        if type(get_response) == Template:
             pass #render template
-
-    def __call__(self):
-        self._output = self.http_get()
-        return self
 
 class Redirect(object):
     def __init__(self, url):
@@ -41,14 +42,7 @@ class Contact(Controller):
         return Redirect('/')
 
 class AboutUs(Controller):
-    def __init__(self, _users=None):
-        if _users:
-            self.users = _users
-        else:
-            self.users = users
-
     def http_get(self):
-        current_user = self.users.get_current_user()
         return Template('/about_us.html', 'We are the robots')
 
 class Login(Controller):
@@ -62,11 +56,17 @@ class Login(Controller):
         login_url = self.users.create_login_url('/')
         return Redirect(login_url)
 
+class News(Controller):
+    def http_get(self, word):
+        return word
+
+
 def application():
-    return webapp.WSGIApplication([ ( '/', Home() ),
-                                    ( '/contact', Contact() ),
-                                    ( '/about_us', AboutUs() ),
-                                    ( '/login', Login() ),
+    return webapp.WSGIApplication([ ( '/', Home ),
+                                    ( '/contact', Contact ),
+                                    ( '/about_us', AboutUs ),
+                                    ( '/login', Login ),
+                                    ( '/news/([-\w]+)', News ),
                                   ], debug=True)
 
 def main():
