@@ -1,12 +1,13 @@
 import unittest
 
 from main import Redirect, Error, Template
-from main import Home, Contact, AboutUs, Login, News, authenticated, administrator
+from main import Home, Contact, AboutUs, Login, News, UserZone, AdminZone
 from main import authenticated, administrator
 
 from mock import Mock
 
 class TestApplication(unittest.TestCase):
+    """Handler tests """
     def test_home(self):
         home = Home()
         assert home.http_get() == 'Hello world!'
@@ -38,7 +39,33 @@ class TestApplication(unittest.TestCase):
         news = News()
         assert news.http_get('the bird is the word') == 'the bird is the word'
 
+    def test_user_zone(self):
+        user = Mock()
+        user.nickname.return_value = 'info@example.com'
+
+        users = Mock()
+        users.get_current_user.return_value = user
+
+        userzone = UserZone(users)
+        result = userzone.http_get()
+
+        assert result == 'info@example.com'
+
+    def test_admin_zone(self):
+        user = Mock()
+        user.nickname.return_value = 'info@example.com'
+
+        users = Mock()
+        users.get_current_user.return_value = user
+        users.is_current_user_admin.return_value = True
+
+        adminzone = AdminZone(users)
+        result = adminzone.http_get()
+
+        assert result == 'info@example.com'
+
 class TestDecorators(unittest.TestCase):
+    """Tests for the authentication and administrator decorator"""
     def test_authenticated_no_user(self):
         #Arrange
         f = Mock()

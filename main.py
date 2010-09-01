@@ -107,6 +107,11 @@ class UserZone(Controller):
     def http_get(self):
         return self.users.get_current_user().nickname()
 
+class AdminZone(Controller):
+    @administrator
+    def http_get(self):
+        return self.users.get_current_user().nickname()
+
 #URLS
 def application():
     return webapp.WSGIApplication([ ( '/', Home ),
@@ -115,6 +120,7 @@ def application():
                                     ( '/login', Login ),
                                     ( '/news/([-\w]+)', News ),
                                     ( '/userzone', UserZone ),
+                                    ( '/adminzone', UserZone ),
                                   ], debug=True)
 
 def main():
