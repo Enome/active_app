@@ -30,6 +30,11 @@ class Controller( webapp.RequestHandler ):
         if type(get_response) == Template:
             pass #render template
 
+        #Error
+        if type(get_response) == Error:
+            self.error(get_response.code)
+
+#Response result type
 class Redirect(object):
     def __init__(self, url):
         self.url = url
@@ -39,6 +44,10 @@ class Template(object):
         self.file = file
         self.data = data
 
+class Error(object):
+    def __init__(self, code):
+        self.code = code
+
 #Decorators
 def authenticated(f):
 
@@ -46,55 +55,28 @@ def authenticated(f):
         user = self.users.get_current_user()
 
         if not user:
+            #no user found, redirect to login
             return Redirect(self.users.create_login_url(self.request.uri))
 
         return f(self, *args, **kwargs)
 
     return wrapper
 
-#def authenticated(_users=None, _request=None):
-#    def wrap(f):
-#        def wrapped_f(*args):
-#            users = _users or self.users
-#            request = _request or self.request
-#
-#            user = users.users.get_current_user()
-#            if not user:
-#                return Redirect(self.users.create_login_url(self.request.uri))
-#
-#            f(*args)
-#        return wrapped_f
-#    return wrap
-#
-class Authenticated(object):
-    def __init__(self, f):
-        self.f = f
+def administrator(f):
 
-    def __call__(self, _users=None, _request=None, *args):
-        self.users = _users or self.f.users
-        self.request = _request or self.f.request
-
+    def wrapper(self, *args, **kargs):
         user = self.users.get_current_user()
+
         if not user:
-            return Redirect(self.users.create_login_url(self.request.uri))
+            #no user found, redirect to login
+            return Redirect(self.create_login_url(self.request.uri))
 
-        self.f()
+        if not self.users.is_current_user_admin():
+            #user is logged in but not an admin
+            return Error(403)
 
-import functools
-def auth(method, _users=None, _request=None):
-    @functools.wraps(method) 
-    def wrapper(self, *args, **kwargs):
-        if _users:
-            self.users = _users
+        return f(self, *args, **kargs)
 
-        if _request:
-            self.request = _request
-
-        user = self.users.get_current_user()
-        if not user:
-            return Redirect(self.users.create_login_url(self.request.uri))
-
-        return method(self, *args, **kwargs)
     return wrapper
 
 #RequestHandlers
